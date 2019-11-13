@@ -1,0 +1,70 @@
+pragma solidity ^0.5.12;
+
+
+contract Election{
+struct Candidate{
+    string name;
+    uint voteCount;
+}
+
+struct Voter{
+    bool authorised;
+    bool voted;
+    uint vote_for;
+}
+
+
+address payable public owner;
+string public electionName;
+
+
+mapping(address=>Voter) public voters;
+Candidate[] public candidates;
+uint public total_votes;
+
+
+modifier onlyOwner(){
+    require(owner==msg.sender);
+    _;
+}
+
+constructor(string memory _election_name) public{
+    owner=msg.sender;
+    electionName=_election_name;
+    
+}
+
+function addCandicate(string memory _name) public onlyOwner{
+    candidates.push(Candidate(_name, 0));
+}
+ 
+   function getNumCandidate() public view returns( uint){
+       return candidates.length;
+       
+   }
+    function authorise(address _person)public onlyOwner{
+        voters[_person].authorised=true;
+    }
+    
+    function vote(uint _voteIntex) public{
+        require(!voters[msg.sender].voted);
+        require(voters[msg.sender].authorised);
+        
+    voters[msg.sender].vote_for=_voteIntex;
+    voters[msg.sender].voted= true;
+    candidates[_voteIntex].voteCount+=1;
+    total_votes+=1;
+
+        
+    }
+    
+    
+    function endContract() onlyOwner public{
+        selfdestruct(owner);
+    }
+    
+    
+    
+}
+
+
