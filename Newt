@@ -1,0 +1,144 @@
+pragma solidity ^0.5.12;
+//import"./SafeMath.sol";
+
+
+
+library SafeMath {
+    function add(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a + b;
+        require(c >= a, "SafeMath: addition overflow");
+        return c;
+    }
+    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+        return sub(a, b, "SafeMath: subtraction overflow");
+    }
+    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b <= a, errorMessage);
+        uint256 c = a - b;
+        return c;
+    }
+    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+    
+        if (a == 0) {
+            return 0;
+        }
+
+        uint256 c = a * b;
+        require(c / a == b, "SafeMath: multiplication overflow");
+
+        return c;
+    }
+    function div(uint256 a, uint256 b) internal pure returns (uint256) {
+        return div(a, b, "SafeMath: division by zero");
+    }
+
+    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b > 0, errorMessage);
+        uint256 c = a / b;
+     
+        return c;
+    }
+
+    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
+        return mod(a, b, "SafeMath: modulo by zero");
+    }
+
+    function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b != 0, errorMessage);
+        return a % b;
+    }
+}
+
+contract ERC20Basic {
+    function totalSupply() public view returns (uint);
+    function balanceOf(address tokenOwner) public view returns (uint balance);
+    function transferFrom(address payable from, address payable to, uint tokens) public view returns (bool success);
+    function transfer(address payable to, uint tokens) public view returns (bool success);
+     function allowance(address tokenOwner, address spender) public view returns (uint remaining);
+  //  function approve(address  spender, uint tokens) public view returns (bool success);
+   
+
+    event Transfer(address indexed from, address indexed to, uint tokens);
+    event Approval(address indexed tokenOwner, address indexed spender, uint tokens);
+}
+
+contract Ownable {
+    address public owner;
+    address public newOwner;
+
+    event OwnershipTransferred(address indexed _from, address indexed _to);
+
+    constructor() public {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner {
+        require(msg.sender == owner);
+        _;
+    }
+
+    function transferOwnership(address _newOwner) public onlyOwner {
+        newOwner = _newOwner;
+    }
+    function acceptOwnership() public {
+        require(msg.sender == newOwner);
+       emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
+       
+    }
+}
+
+contract NewToken is Ownable {
+    using SafeMath for uint256;
+    string public symbol;
+    string public  name;
+    uint8 public decimals=8;
+     uint256 public decimalFactor = 10 ** uint256(decimals);
+    uint public _totalSupply;
+
+    mapping(address => uint) balances;
+    mapping(address => mapping(address => uint)) allowed;
+    event Transfer(address indexed from, address indexed to, uint tokens);
+    event Approval(address indexed tokenOwner, address indexed spender, uint tokens);
+    
+    constructor()public{
+         symbol = "NTK";
+        name = "NewToken";
+        _totalSupply = 1000000*decimalFactor;
+       owner= msg.sender;
+    }
+  function totalSupply() public view returns (uint) {
+        return _totalSupply;
+    }
+    
+     function balanceOf(address tokenOwner) public view returns (uint balance) {
+        return balances[tokenOwner];
+    }
+     function transfer(address payable to) public  payable  {
+        balances[msg.sender] = msg.value.sub(balances[msg.sender]);
+        balances[to] = msg.value.add(balances[to]);
+      emit Transfer(msg.sender, to, msg.value);
+       
+    }
+    
+     function approve(address payable spender, uint tokens) public payable {
+        allowed[msg.sender][spender] = tokens;
+       emit Approval(msg.sender, spender, tokens);
+       
+    }
+
+    function transferFrom(address payable from, address  payable to, uint tokens) public  payable {
+        balances[from] = tokens.sub(balances[from] );
+        allowed[from][msg.sender] = tokens.sub(allowed[from][msg.sender]);
+        balances[to] = tokens.add(balances[to]);
+       emit Transfer(from, to, tokens);
+       
+    }
+      function allowance(address tokenOwner, address spender) public view returns (uint remaining) {
+        return allowed[tokenOwner][spender];
+    }
+
+
+
+}
+
