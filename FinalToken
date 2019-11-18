@@ -1,0 +1,122 @@
+pragma solidity ^0.5.12;
+//import"./SafeMath.sol";
+library SafeMath {
+    function safeAdd(uint a, uint b) public pure returns (uint c) {
+        c = a + b;
+        require(c >= a);
+    }
+    function safeSub(uint a, uint b) public pure returns (uint c) {
+        require(b <= a);
+        c = a - b;
+    }
+    function safeMul(uint a, uint b) public pure returns (uint c) {
+        c = a * b;
+        require(a == 0 || c / a == b);
+    }
+    function safeDiv(uint a, uint b) public pure returns (uint c) {
+        require(b > 0);
+        c = a / b;
+    }
+}
+
+
+contract ownable {
+    address public owner;
+    address public newOwner;
+
+    event OwnershipTransferred(address indexed _from, address indexed _to);
+
+   constructor() public {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner {
+        require(msg.sender == owner);
+        _;
+    }
+
+    function transferowner(address _newowner) public onlyOwner {
+        newOwner = _newowner;
+    }
+    function acceptOwnership() public {
+        require(msg.sender == newOwner);
+        emit OwnershipTransferred(owner, newOwner);
+        owner = newOwner;
+        newOwner =owner;
+    }
+}
+contract ERC20Interface {
+    function totalSupply() public view  returns (uint256);
+    function balanceOf(address tokenOwner) public view returns (uint256 balance);
+    function transferFrom(address  from, address  to, uint256 tokens) public  returns (bool success);
+    function transfer(address  to, uint256 tokens) public  returns (bool success);
+    function allowance(address tokenOwner, address spender) public  returns (uint remaining);
+    function approve(address spender, uint256 tokens) public returns (bool success);
+   
+
+    event Transfer(address indexed from, address indexed to, uint tokens);
+    event Approval(address indexed tokenOwner, address indexed spender, uint tokens);
+}
+
+contract FinalToken  is ownable, ERC20Interface{
+ using SafeMath for uint256;
+ 
+    string public symbol;
+    string public  name;
+    uint8 public decimals=8;
+    uint256 decimal_factor=10**uint256(decimals);
+    uint256 public _totalSupply;
+
+    mapping(address => uint) balances;
+    mapping(address => mapping(address => uint)) allowances;
+
+    constructor()public {
+        symbol = "FNL";
+        name = "FinalToken";
+      
+        _totalSupply = 100000*decimal_factor;
+        balances[msg.sender] = _totalSupply;
+     
+    }
+    
+    function totalSupply() public view returns (uint256){
+        return _totalSupply;
+        
+    }
+
+
+    function balanceOf(address _owner) public view returns(uint256 balance){
+    return balances[_owner];
+    }
+    
+    function transfer(address to, uint256 tokens) public  returns (bool success) {
+      balances[msg.sender]-=tokens;
+        balances[to]+= tokens;
+        emit Transfer(msg.sender, to, tokens);
+        return true;
+    }
+
+    function approve(address spender, uint256 tokens) public returns (bool success) {
+        allowances[msg.sender][spender] = tokens;
+     emit   Approval(msg.sender, spender, tokens);
+        return true;
+    }
+
+     function transferFrom(address from, address to, uint256 tokens) public returns (bool success) {
+        balances[from]-=tokens;
+        allowances[from][msg.sender]-= tokens;
+        balances[to]-=tokens;
+      emit Transfer(from, to, tokens);
+        return true;
+    }
+    
+     function allowance(address tokenOwner, address spender) public  returns (uint256 remaining) {
+        return allowances[tokenOwner][spender];
+    }
+
+    
+    
+    
+    
+    
+}
